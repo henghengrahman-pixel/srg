@@ -1,0 +1,16 @@
+
+<h1>TemanBelanja</h1>
+<a href="/admin/login">Admin Login</a>
+<hr>
+<% products.forEach(p=>{ %>
+<div>
+<% if(p.image){ %>
+<img src="/uploads/<%=p.image%>" width="200">
+<% } %>
+<h3><%=p.title%></h3>
+<p>Kategori: <%=p.category%></p>
+<p>Rp <%=p.price%></p>
+<a href="<%=p.affiliate%>" target="_blank">Beli di Shopee</a>
+</div>
+<hr>
+<% }) %>

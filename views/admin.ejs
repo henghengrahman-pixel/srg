@@ -1,0 +1,22 @@
+
+<h2>Dashboard Admin</h2>
+<a href="/admin/logout">Logout</a>
+<hr>
+<form method="POST" action="/admin/product" enctype="multipart/form-data">
+<input name="title" placeholder="Nama Produk">
+<input name="category" placeholder="Kategori">
+<input name="price" placeholder="Harga">
+<input name="affiliate" placeholder="Link Shopee">
+<input type="file" name="image">
+<button>Tambah Produk</button>
+</form>
+<hr>
+<% products.forEach(p=>{ %>
+<div>
+<% if(p.image){ %>
+<img src="/uploads/<%=p.image%>" width="120">
+<% } %>
+<b><%=p.title%></b>
+</div>
+<hr>
+<% }) %>
