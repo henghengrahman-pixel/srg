@@ -1,0 +1,1 @@
+document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('form[data-confirm]').forEach(f=>f.addEventListener('submit',e=>{if(!confirm(f.getAttribute('data-confirm')||'Yakin?'))e.preventDefault()}))});
