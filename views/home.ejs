@@ -1,1 +1,135 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title><%= siteName %> - Pilihan Produk & Inspirasi Belanja</title><meta name="description" content="TemanBelanja hadir dengan tampilan modern, katalog produk cantik, dan artikel inspiratif untuk pengalaman belanja yang nyaman."><link rel="stylesheet" href="/public/style.css"></head><body><div class="container"><header class="topbar"><div class="brand">Teman<span>Belanja</span></div><div class="top-actions"><a class="nav-btn" href="/articles">Artikel</a><a class="btn-secondary" href="/admin/login">Admin</a></div></header><section class="hero"><div class="hero-main"><h1>Katalog Modern untuk Produk Pilihan yang Tampil Elegan</h1><p>Tampilan bersih, premium, dan nyaman di mobile. Cocok untuk fashion, skincare, parfum, dan produk pilihan lainnya dengan halaman detail yang rapi dan mewah.</p><div class="hero-badges"><span class="badge">Mobile Friendly</span><span class="badge">Desain Premium</span><span class="badge">Artikel Inspiratif</span></div></div><div class="hero-side"><div><h3>Temukan favoritmu</h3><p>Jelajahi produk unggulan dengan tampilan bergaya marketplace modern dan halaman detail yang informatif.</p></div><a href="#produk" class="btn">Lihat Produk</a></div></section><div class="section-head" id="produk"><div><h2>Produk Terbaru</h2><p>Pilihan produk yang ditata rapi dengan sentuhan visual premium.</p></div></div><% if (featured.length === 0) { %><div class="empty">Belum ada produk. Tambahkan dulu dari dashboard admin.</div><% } %><section class="grid"><% featured.forEach(p => { %><article class="card"><div class="card-media"><span class="card-tag"><%= p.category || 'Produk' %></span><% if (p.image) { %><img src="/uploads/<%= p.image %>" alt="<%= p.title %>"><% } else if (p.image_url) { %><img src="<%= p.image_url %>" alt="<%= p.title %>"><% } else { %><img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=900&q=80" alt="<%= p.title %>"><% } %></div><div class="card-body"><div class="meta-pill">Pilihan Terbaik</div><h3 class="card-title"><%= p.title %></h3><p class="card-desc"><%= p.short_description || 'Produk ditampilkan dengan tata letak yang bersih, modern, dan mewah.' %></p><div class="price-row"><div class="price">Rp <%= Number(p.price || 0).toLocaleString('id-ID') %></div><% if (Number(p.old_price || 0) > 0) { %><div class="old-price">Rp <%= Number(p.old_price || 0).toLocaleString('id-ID') %></div><% } %></div><a class="buy-btn btn" href="/product/<%= p.slug %>">Lihat Detail</a></div></article><% }) %></section><div class="section-head"><div><h2>Artikel Terbaru</h2><p>Konten inspiratif untuk mempercantik tampilan situs dan memperkaya halaman publik.</p></div><a class="nav-btn" href="/articles">Lihat Semua</a></div><% if (latestArticles.length === 0) { %><div class="empty">Belum ada artikel. Tambahkan dari dashboard admin.</div><% } %><section class="article-grid"><% latestArticles.forEach(article => { %><article class="article-card"><% if (article.thumbnail) { %><img src="/uploads/<%= article.thumbnail %>" alt="<%= article.title %>"><% } else if (article.thumbnail_url) { %><img src="<%= article.thumbnail_url %>" alt="<%= article.title %>"><% } else { %><img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" alt="<%= article.title %>"><% } %><div class="article-body"><h3><%= article.title %></h3><p><%= article.excerpt || 'Artikel inspiratif yang membuat website tampil hidup, cantik, dan profesional.' %></p><a class="nav-btn" href="/articles/<%= article.slug %>">Baca Artikel</a></div></article><% }) %></section><footer class="footer"><h3 style="margin-bottom:10px">TemanBelanja</h3><p>Desain premium untuk katalog produk, konten artikel, dan pengalaman visual yang rapi, modern, dan nyaman di semua perangkat.</p></footer></div><script src="/public/main.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= siteName %> - Produk Pilihan & Artikel Inspiratif</title>
+  <meta name="description" content="TemanBelanja hadir dengan katalog produk modern, tampilan mewah, dan artikel inspiratif untuk pengalaman belanja yang nyaman.">
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">Teman<span>Belanja</span></div>
+      <div class="top-actions">
+        <a class="nav-btn" href="/articles">Artikel</a>
+        <a class="btn-secondary" href="/admin/login">Admin</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-main">
+        <h1>Katalog Modern untuk Produk Pilihan yang Tampil Elegan</h1>
+        <p>
+          TemanBelanja menghadirkan pilihan produk dengan tampilan bersih,
+          mewah, nyaman di mobile, dan halaman detail yang rapi serta menarik.
+        </p>
+        <div class="hero-badges">
+          <span class="badge">Mobile Friendly</span>
+          <span class="badge">Desain Premium</span>
+          <span class="badge">Artikel Inspiratif</span>
+        </div>
+      </div>
+
+      <div class="hero-side">
+        <div>
+          <h3>Temukan favoritmu</h3>
+          <p>
+            Jelajahi produk unggulan dengan tampilan yang modern,
+            terstruktur, dan enak dilihat.
+          </p>
+        </div>
+        <a href="#produk" class="btn">Lihat Produk</a>
+      </div>
+    </section>
+
+    <div class="section-head" id="produk">
+      <div>
+        <h2>Produk Terbaru</h2>
+        <p>Pilihan produk yang ditata rapi dengan sentuhan visual premium.</p>
+      </div>
+    </div>
+
+    <% if (featured.length === 0) { %>
+      <div class="empty">Belum ada produk. Tambahkan dulu dari dashboard admin.</div>
+    <% } else { %>
+      <section class="grid">
+        <% featured.forEach(p => { %>
+          <article class="card">
+            <div class="card-media">
+              <span class="card-tag"><%= p.category || 'Produk' %></span>
+
+              <% if (p.image) { %>
+                <img src="/uploads/<%= p.image %>" alt="<%= p.title %>">
+              <% } else if (p.image_url) { %>
+                <img src="<%= p.image_url %>" alt="<%= p.title %>">
+              <% } else { %>
+                <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=900&q=80" alt="<%= p.title %>">
+              <% } %>
+            </div>
+
+            <div class="card-body">
+              <div class="meta-pill">Pilihan Terbaik</div>
+              <h3 class="card-title"><%= p.title %></h3>
+              <p class="card-desc">
+                <%= p.short_description || 'Produk ditampilkan dengan layout yang rapi, modern, dan nyaman dilihat.' %>
+              </p>
+
+              <div class="price-row">
+                <div class="price">Rp <%= Number(p.price || 0).toLocaleString('id-ID') %></div>
+                <% if (Number(p.old_price || 0) > 0) { %>
+                  <div class="old-price">Rp <%= Number(p.old_price || 0).toLocaleString('id-ID') %></div>
+                <% } %>
+              </div>
+
+              <a class="buy-btn" href="/product/<%= p.slug %>">Lihat Detail</a>
+            </div>
+          </article>
+        <% }) %>
+      </section>
+    <% } %>
+
+    <div class="section-head">
+      <div>
+        <h2>Artikel Terbaru</h2>
+        <p>Konten inspiratif untuk mempercantik tampilan situs dan memperkaya halaman publik.</p>
+      </div>
+      <a class="nav-btn" href="/articles">Lihat Semua</a>
+    </div>
+
+    <% if (latestArticles.length === 0) { %>
+      <div class="empty">Belum ada artikel. Tambahkan dari dashboard admin.</div>
+    <% } else { %>
+      <section class="article-grid">
+        <% latestArticles.forEach(article => { %>
+          <article class="article-card">
+            <% if (article.thumbnail) { %>
+              <img src="/uploads/<%= article.thumbnail %>" alt="<%= article.title %>">
+            <% } else if (article.thumbnail_url) { %>
+              <img src="<%= article.thumbnail_url %>" alt="<%= article.title %>">
+            <% } else { %>
+              <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=80" alt="<%= article.title %>">
+            <% } %>
+
+            <div class="article-body">
+              <h3><%= article.title %></h3>
+              <p><%= article.excerpt || 'Artikel inspiratif yang membuat website tampil hidup, rapi, dan profesional.' %></p>
+              <a class="nav-btn" href="/articles/<%= article.slug %>">Baca Artikel</a>
+            </div>
+          </article>
+        <% }) %>
+      </section>
+    <% } %>
+
+    <footer class="footer">
+      <h3 style="margin-bottom:10px">TemanBelanja</h3>
+      <p>
+        Desain premium untuk katalog produk dan artikel dengan tampilan yang
+        lebih rapi, elegan, dan nyaman di semua perangkat.
+      </p>
+    </footer>
+  </div>
+
+  <script src="/public/main.js"></script>
+</body>
+</html>
