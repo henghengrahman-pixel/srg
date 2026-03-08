@@ -1,0 +1,36 @@
+<%- include('partials/head', { meta }) %>
+<%- include('partials/header') %>
+<section class="container section-gap narrow-top">
+  <div class="section-head">
+    <span class="section-kicker">Kategori</span>
+    <h1><%= categoryName %></h1>
+    <p>Kumpulan produk affiliate Shopee untuk kategori <%= categoryName %>.</p>
+  </div>
+  <div class="product-grid">
+    <% products.forEach(function(product){ %>
+      <article class="product-card">
+        <a class="product-thumb" href="/produk/<%= product.slug %>">
+          <img src="<%= product.image %>" alt="<%= product.name %>">
+          <% if (product.badge) { %><span class="product-badge"><%= product.badge %></span><% } %>
+        </a>
+        <div class="product-body">
+          <div class="product-meta-row">
+            <span class="store-pill"><%= product.marketplace || 'Shopee' %></span>
+            <span class="rating-pill">★ <%= product.rating || 4.8 %></span>
+          </div>
+          <h3 class="product-title"><a href="/produk/<%= product.slug %>"><%= product.name %></a></h3>
+          <p class="product-text"><%= product.shortDesc %></p>
+          <div class="price-wrap">
+            <strong><%= formatRupiah(product.price) %></strong>
+            <% if (product.comparePrice) { %><span><%= formatRupiah(product.comparePrice) %></span><% } %>
+          </div>
+          <div class="product-actions">
+            <a class="btn btn-primary" href="/go/<%= product.id %>" target="_blank" rel="nofollow sponsored noopener">Beli di Shopee</a>
+            <a class="btn btn-dark" href="/produk/<%= product.slug %>">Detail</a>
+          </div>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/footer') %>

@@ -1,0 +1,22 @@
+<%- include('partials/head', { meta }) %>
+<%- include('partials/header') %>
+<section class="container section-gap narrow-top">
+  <div class="section-head">
+    <span class="section-kicker">Artikel</span>
+    <h1>Artikel SEO Affiliate</h1>
+    <p>Kumpulan artikel untuk menambah trafik organik dan membantu konversi affiliate.</p>
+  </div>
+  <div class="article-grid wide-grid">
+    <% articles.forEach(function(article){ %>
+      <article class="article-card glass-card">
+        <a class="article-thumb" href="/artikel/<%= article.slug %>"><img src="<%= article.image %>" alt="<%= article.title %>"></a>
+        <div class="article-body">
+          <h3><a href="/artikel/<%= article.slug %>"><%= article.title %></a></h3>
+          <p><%= article.excerpt %></p>
+          <a href="/artikel/<%= article.slug %>" class="text-link">Baca artikel</a>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/footer') %>

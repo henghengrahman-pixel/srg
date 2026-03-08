@@ -1,0 +1,34 @@
+<%- include('partials/head', { meta }) %>
+<section class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Lux<span>Affiliate</span></div>
+    <a href="/secure-admin-dashboard-rmz9x">Dashboard</a>
+    <a href="/secure-admin-products-rmz9x">Produk</a>
+    <a href="/secure-admin-articles-rmz9x">Artikel</a>
+    <form action="/secure-admin-logout-rmz9x" method="POST"><button class="btn btn-dark full-btn" type="submit">Logout</button></form>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar"><h1>Dashboard</h1></div>
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card"><span>Total Produk</span><strong><%= stats.products %></strong></div>
+      <div class="admin-stat-card"><span>Produk Aktif</span><strong><%= stats.activeProducts %></strong></div>
+      <div class="admin-stat-card"><span>Artikel</span><strong><%= stats.articles %></strong></div>
+      <div class="admin-stat-card"><span>Total Klik</span><strong><%= stats.clicks %></strong></div>
+    </div>
+    <div class="admin-panel glass-card">
+      <h2>Klik terbaru</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Produk</th><th>Referer</th><th>Waktu</th></tr></thead>
+          <tbody>
+          <% latestClicks.forEach(function(item){ %>
+            <tr><td><%= item.productName %></td><td><%= item.referer || '-' %></td><td><%= item.createdAt %></td></tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</section>
+</body>
+</html>

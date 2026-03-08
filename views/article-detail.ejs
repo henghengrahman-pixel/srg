@@ -1,0 +1,37 @@
+<%- include('partials/head', { meta }) %>
+<%- include('partials/header') %>
+<section class="container section-gap narrow-top">
+  <article class="article-detail glass-card">
+    <img src="<%= article.image %>" alt="<%= article.title %>" class="article-hero-image">
+    <div class="article-content-wrap">
+      <span class="section-kicker">Artikel SEO</span>
+      <h1><%= article.title %></h1>
+      <p class="lead-text"><%= article.excerpt %></p>
+      <div class="rich-content"><%- article.content %></div>
+    </div>
+  </article>
+</section>
+
+<section class="container section-gap">
+  <div class="section-head between">
+    <div>
+      <span class="section-kicker">Produk rekomendasi</span>
+      <h2>Produk terkait artikel</h2>
+    </div>
+  </div>
+  <div class="product-grid">
+    <% relatedProducts.forEach(function(product){ %>
+      <article class="product-card">
+        <a class="product-thumb" href="/produk/<%= product.slug %>"><img src="<%= product.image %>" alt="<%= product.name %>"></a>
+        <div class="product-body">
+          <h3 class="product-title"><a href="/produk/<%= product.slug %>"><%= product.name %></a></h3>
+          <div class="price-wrap"><strong><%= formatRupiah(product.price) %></strong></div>
+          <div class="product-actions">
+            <a class="btn btn-primary" href="/go/<%= product.id %>" target="_blank" rel="nofollow sponsored noopener">Beli di Shopee</a>
+          </div>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/footer') %>

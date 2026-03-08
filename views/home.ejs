@@ -1,0 +1,99 @@
+<%- include('partials/head', { meta }) %>
+<%- include('partials/header') %>
+
+<section class="hero-section">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow">Affiliate Web Premium</span>
+      <h1>Template affiliate mirip marketplace dengan tampilan mewah dan siap SEO.</h1>
+      <p>Bangun web affiliate Shopee dengan katalog kotak-kotak profesional, artikel SEO, dan admin upload produk yang rapi.</p>
+      <div class="hero-actions">
+        <a href="#produk" class="btn btn-primary">Lihat Produk</a>
+        <a href="/artikel" class="btn btn-secondary">Baca Artikel</a>
+      </div>
+    </div>
+    <div class="hero-card glass-card">
+      <div class="hero-stat-grid">
+        <div><strong><%= products.length %>+</strong><span>Produk aktif</span></div>
+        <div><strong><%= articles.length %>+</strong><span>Artikel SEO</span></div>
+        <div><strong>Fast</strong><span>Load ringan</span></div>
+        <div><strong>SEO</strong><span>Meta lengkap</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container section-gap">
+  <div class="section-head between">
+    <div>
+      <span class="section-kicker">Kategori populer</span>
+      <h2>Katalog affiliate modern</h2>
+    </div>
+  </div>
+  <div class="chips-wrap">
+    <% categories.forEach(function(cat){ %>
+      <a class="chip" href="/kategori/<%= cat.toLowerCase().replace(/[^a-z0-9]+/g, '-') %>"><%= cat %></a>
+    <% }) %>
+  </div>
+</section>
+
+<section class="container section-gap" id="produk">
+  <div class="section-head between">
+    <div>
+      <span class="section-kicker">Produk pilihan</span>
+      <h2>Grid produk profesional</h2>
+    </div>
+  </div>
+  <div class="product-grid">
+    <% (featured.length ? featured : products).forEach(function(product){ %>
+      <article class="product-card">
+        <a class="product-thumb" href="/produk/<%= product.slug %>">
+          <img src="<%= product.image %>" alt="<%= product.name %>">
+          <% if (product.badge) { %><span class="product-badge"><%= product.badge %></span><% } %>
+        </a>
+        <div class="product-body">
+          <div class="product-meta-row">
+            <span class="store-pill"><%= product.marketplace || 'Shopee' %></span>
+            <span class="rating-pill">★ <%= product.rating || 4.8 %></span>
+          </div>
+          <h3 class="product-title"><a href="/produk/<%= product.slug %>"><%= product.name %></a></h3>
+          <p class="product-text"><%= product.shortDesc %></p>
+          <div class="price-wrap">
+            <strong><%= formatRupiah(product.price) %></strong>
+            <% if (product.comparePrice) { %><span><%= formatRupiah(product.comparePrice) %></span><% } %>
+          </div>
+          <div class="product-actions">
+            <a class="btn btn-primary" href="/go/<%= product.id %>" target="_blank" rel="nofollow sponsored noopener">Beli di Shopee</a>
+            <a class="btn btn-dark" href="/produk/<%= product.slug %>">Detail</a>
+          </div>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<section class="container section-gap">
+  <div class="section-head between">
+    <div>
+      <span class="section-kicker">Konten organik</span>
+      <h2>Artikel SEO terbaru</h2>
+    </div>
+    <a class="text-link" href="/artikel">Lihat semua</a>
+  </div>
+  <div class="article-grid">
+    <% articles.forEach(function(article){ %>
+      <article class="article-card glass-card">
+        <a class="article-thumb" href="/artikel/<%= article.slug %>">
+          <img src="<%= article.image %>" alt="<%= article.title %>">
+        </a>
+        <div class="article-body">
+          <h3><a href="/artikel/<%= article.slug %>"><%= article.title %></a></h3>
+          <p><%= article.excerpt %></p>
+          <a href="/artikel/<%= article.slug %>" class="text-link">Baca artikel</a>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

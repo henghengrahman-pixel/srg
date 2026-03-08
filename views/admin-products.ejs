@@ -1,0 +1,41 @@
+<%- include('partials/head', { meta }) %>
+<section class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Lux<span>Affiliate</span></div>
+    <a href="/secure-admin-dashboard-rmz9x">Dashboard</a>
+    <a href="/secure-admin-products-rmz9x" class="active">Produk</a>
+    <a href="/secure-admin-articles-rmz9x">Artikel</a>
+    <form action="/secure-admin-logout-rmz9x" method="POST"><button class="btn btn-dark full-btn" type="submit">Logout</button></form>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar between">
+      <h1>Produk</h1>
+      <a class="btn btn-primary" href="/secure-admin-products-rmz9x/new">Tambah Produk</a>
+    </div>
+    <div class="admin-panel glass-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% products.forEach(function(product){ %>
+              <tr>
+                <td><%= product.name %></td>
+                <td><%= product.category %></td>
+                <td><%= formatRupiah(product.price) %></td>
+                <td><%= product.active ? 'Aktif' : 'Draft' %></td>
+                <td class="action-cell">
+                  <a class="btn btn-secondary btn-small" href="/secure-admin-products-rmz9x/<%= product.id %>/edit">Edit</a>
+                  <form action="/secure-admin-products-rmz9x/<%= product.id %>/delete" method="POST" onsubmit="return confirm('Hapus produk ini?')">
+                    <button class="btn btn-danger btn-small" type="submit">Hapus</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</section>
+</body>
+</html>

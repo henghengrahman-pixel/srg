@@ -1,0 +1,25 @@
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": <%- JSON.stringify(product.name) %>,
+  "image": [<%- JSON.stringify(product.image) %>],
+  "description": <%- JSON.stringify(product.shortDesc || '') %>,
+  "brand": {
+    "@type": "Brand",
+    "name": <%- JSON.stringify(product.brand || '') %>
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "IDR",
+    "price": <%- JSON.stringify(String(product.price || 0)) %>,
+    "availability": "https://schema.org/InStock",
+    "url": <%- JSON.stringify(BASE_URL + '/produk/' + product.slug) %>
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": <%- JSON.stringify(String(product.rating || 4.8)) %>,
+    "reviewCount": "100"
+  }
+}
+</script>

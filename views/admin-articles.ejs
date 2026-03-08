@@ -1,0 +1,47 @@
+<%- include('partials/head', { meta }) %>
+<section class="admin-layout">
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Lux<span>Affiliate</span></div>
+    <a href="/secure-admin-dashboard-rmz9x">Dashboard</a>
+    <a href="/secure-admin-products-rmz9x">Produk</a>
+    <a href="/secure-admin-articles-rmz9x" class="active">Artikel</a>
+    <form action="/secure-admin-logout-rmz9x" method="POST"><button class="btn btn-dark full-btn" type="submit">Logout</button></form>
+  </aside>
+  <main class="admin-main">
+    <div class="admin-topbar"><h1>Artikel</h1></div>
+    <form action="/secure-admin-articles-rmz9x" method="POST" class="admin-form-grid glass-card bottom-gap">
+      <div><label>Judul</label><input type="text" name="title" required></div>
+      <div><label>Slug</label><input type="text" name="slug"></div>
+      <div class="full-span"><label>Excerpt</label><textarea name="excerpt" rows="3"></textarea></div>
+      <div><label>Gambar URL</label><input type="url" name="image"></div>
+      <div><label>SEO Title</label><input type="text" name="seoTitle"></div>
+      <div class="full-span"><label>SEO Description</label><textarea name="seoDescription" rows="2"></textarea></div>
+      <div class="full-span"><label>Konten (HTML diperbolehkan)</label><textarea name="content" rows="8"></textarea></div>
+      <label class="check-line"><input type="checkbox" name="active" checked> Artikel aktif</label>
+      <div class="full-span form-actions"><button class="btn btn-primary" type="submit">Tambah Artikel</button></div>
+    </form>
+    <div class="admin-panel glass-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Judul</th><th>Slug</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody>
+            <% articles.forEach(function(article){ %>
+              <tr>
+                <td><%= article.title %></td>
+                <td><%= article.slug %></td>
+                <td><%= article.active ? 'Aktif' : 'Draft' %></td>
+                <td>
+                  <form action="/secure-admin-articles-rmz9x/<%= article.id %>/delete" method="POST" onsubmit="return confirm('Hapus artikel ini?')">
+                    <button class="btn btn-danger btn-small" type="submit">Hapus</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</section>
+</body>
+</html>

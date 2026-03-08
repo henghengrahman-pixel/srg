@@ -1,0 +1,22 @@
+<%- include('partials/head', { meta }) %>
+<section class="admin-auth-page">
+  <div class="admin-auth-card glass-card">
+    <div class="admin-auth-brand">Lux<span>Affiliate</span></div>
+    <h1>Admin Login</h1>
+    <p>Halaman ini tidak ditampilkan di menu depan.</p>
+    <% if (error) { %><div class="alert-error"><%= error %></div><% } %>
+    <form action="<%= ADMIN_LOGIN_PATH %>" method="POST" class="admin-form-grid single-form">
+      <div>
+        <label>Username</label>
+        <input type="text" name="username" required>
+      </div>
+      <div>
+        <label>Password</label>
+        <input type="password" name="password" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Masuk</button>
+    </form>
+  </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<%- include('partials/head', { meta }) %>
+<%- include('partials/header') %>
+<%- include('partials/schema-product', { product }) %>
+<section class="container section-gap narrow-top">
+  <div class="product-detail-grid">
+    <div class="detail-media glass-card">
+      <img src="<%= product.image %>" alt="<%= product.name %>" class="detail-main-image">
+      <% if (product.gallery && product.gallery.length) { %>
+        <div class="detail-gallery">
+          <% product.gallery.forEach(function(img){ %>
+            <img src="<%= img %>" alt="<%= product.name %>">
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+    <div class="detail-info">
+      <div class="product-meta-row">
+        <span class="store-pill"><%= product.marketplace || 'Shopee' %></span>
+        <% if (product.badge) { %><span class="product-badge inline-badge"><%= product.badge %></span><% } %>
+      </div>
+      <h1><%= product.name %></h1>
+      <p class="lead-text"><%= product.shortDesc %></p>
+      <div class="price-wrap large-price">
+        <strong><%= formatRupiah(product.price) %></strong>
+        <% if (product.comparePrice) { %><span><%= formatRupiah(product.comparePrice) %></span><% } %>
+      </div>
+      <div class="detail-stats">
+        <div><span>Brand</span><strong><%= product.brand || '-' %></strong></div>
+        <div><span>Store</span><strong><%= product.shopeeStore || '-' %></strong></div>
+        <div><span>Rating</span><strong>★ <%= product.rating || 4.8 %></strong></div>
+        <div><span>Terjual</span><strong><%= product.sold || 'Baru' %></strong></div>
+      </div>
+      <div class="product-actions detail-actions">
+        <a class="btn btn-primary" href="/go/<%= product.id %>" target="_blank" rel="nofollow sponsored noopener">Beli di Shopee</a>
+        <a class="btn btn-dark" href="/kategori/<%= product.category.toLowerCase().replace(/[^a-z0-9]+/g, '-') %>">Kategori</a>
+      </div>
+      <div class="glass-card detail-copy">
+        <h3>Deskripsi Produk</h3>
+        <div class="rich-content"><%- product.content %></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container section-gap">
+  <div class="section-head between">
+    <div>
+      <span class="section-kicker">Produk terkait</span>
+      <h2>Rekomendasi lainnya</h2>
+    </div>
+  </div>
+  <div class="product-grid">
+    <% related.forEach(function(item){ %>
+      <article class="product-card">
+        <a class="product-thumb" href="/produk/<%= item.slug %>"><img src="<%= item.image %>" alt="<%= item.name %>"></a>
+        <div class="product-body">
+          <h3 class="product-title"><a href="/produk/<%= item.slug %>"><%= item.name %></a></h3>
+          <div class="price-wrap"><strong><%= formatRupiah(item.price) %></strong></div>
+          <div class="product-actions">
+            <a class="btn btn-primary" href="/go/<%= item.id %>" target="_blank" rel="nofollow sponsored noopener">Beli di Shopee</a>
+          </div>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</section>
+<%- include('partials/footer') %>
