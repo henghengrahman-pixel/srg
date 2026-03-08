@@ -10,33 +10,35 @@ const compression = require('compression');
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'affiliate-web-secret';
+
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const ARTICLES_FILE = path.join(DATA_DIR, 'articles.json');
 const CLICKS_FILE = path.join(DATA_DIR, 'clicks.json');
-const PUBLIC_UPLOADS = path.join(__dirname, 'public', 'uploads');
+
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const PUBLIC_UPLOADS = path.join(PUBLIC_DIR, 'uploads');
+
 const ADMIN_LOGIN_PATH = '/secure-admin-login-rmz9x';
 const ADMIN_DASHBOARD_PATH = '/secure-admin-dashboard-rmz9x';
+
+app.set('trust proxy', 1);
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
 function ensureFile(file, fallback) {
-  if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify(fallback, null, 2), 'utf8');
-}
-
-function ensureStorage() {
-  ensureDir(DATA_DIR);
-  ensureDir(PUBLIC_UPLOADS);
-  ensureFile(PRODUCTS_FILE, seedProducts());
-  ensureFile(ARTICLES_FILE, seedArticles());
-  ensureFile(CLICKS_FILE, []);
+  if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, JSON.stringify(fallback, null, 2), 'utf8');
+  }
 }
 
 function seedProducts() {
@@ -114,6 +116,15 @@ function seedArticles() {
   ];
 }
 
+function ensureStorage() {
+  ensureDir(DATA_DIR);
+  ensureDir(PUBLIC_DIR);
+  ensureDir(PUBLIC_UPLOADS);
+  ensureFile(PRODUCTS_FILE, seedProducts());
+  ensureFile(ARTICLES_FILE, seedArticles());
+  ensureFile(CLICKS_FILE, []);
+}
+
 function readJson(file, fallback = []) {
   try {
     ensureStorage();
@@ -121,7 +132,7 @@ function readJson(file, fallback = []) {
     if (!raw) return fallback;
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : fallback;
-  } catch (error) {
+  } catch {
     return fallback;
   }
 }
@@ -156,7 +167,13 @@ function saveClicks(items) {
 }
 
 function makeSlug(input, fallback = 'item') {
-  return slugify(String(input || fallback), { lower: true, strict: true, locale: 'id' }) || `${fallback}-${Date.now()}`;
+  return (
+    slugify(String(input || fallback), {
+      lower: true,
+      strict: true,
+      locale: 'id'
+    }) || `${fallback}-${Date.now()}`
+  );
 }
 
 function formatRupiah(value) {
@@ -195,10 +212,37 @@ function buildMeta({ title, description, image, canonical, keywords, type = 'web
   };
 }
 
+function render404(req, res, metaTitle = 'Halaman tidak ditemukan') {
+  const view404 = path.join(__dirname, 'views', '404.ejs');
+  const meta = buildMeta({
+    title: metaTitle,
+    description: 'Halaman tidak ditemukan.',
+    canonical: `${BASE_URL}${req.path}`
+  });
+
+  if (fs.existsSync(view404)) {
+    return res.status(404).render('404', { meta });
+  }
+
+  return res.status(404).send(`
+    <!doctype html>
+    <html lang="id">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>${meta.title}</title>
+      </head>
+      <body style="font-family:Arial,sans-serif;padding:40px;background:#0b1020;color:#fff">
+        <h1>404</h1>
+        <p>Halaman tidak ditemukan.</p>
+        <a href="/" style="color:#ffd66b">Kembali ke Home</a>
+      </body>
+    </html>
+  `);
+}
+
 ensureStorage();
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
 app.locals.formatRupiah = formatRupiah;
 app.locals.BASE_URL = BASE_URL;
 app.locals.ADMIN_LOGIN_PATH = ADMIN_LOGIN_PATH;
@@ -207,8 +251,9 @@ app.use(compression());
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(methodOverride('_method'));
-app.use('/public', express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(PUBLIC_DIR));
+app.use('/public', express.static(PUBLIC_DIR));
+
 app.use(
   session({
     secret: SESSION_SECRET,
@@ -237,7 +282,9 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: function (_req, file, cb) {
-    if (!file.mimetype.startsWith('image/')) return cb(new Error('File harus berupa gambar'));
+    if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+      return cb(new Error('File harus berupa gambar'));
+    }
     cb(null, true);
   }
 });
@@ -259,13 +306,23 @@ function getActiveProducts() {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
+function resolveImage(req, current = '') {
+  if (req.file) return `/uploads/${req.file.filename}`;
+  if (safeText(req.body.imageUrl, 500)) return safeText(req.body.imageUrl, 500);
+  return current;
+}
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.get('/', (req, res) => {
   const products = getActiveProducts();
   const featured = products.filter((item) => item.featured).slice(0, 8);
   const articles = loadArticles().filter((item) => item.active).slice(0, 6);
   const categories = [...new Set(products.map((item) => item.category).filter(Boolean))];
 
-  res.render('home', {
+  return res.render('home', {
     meta: buildMeta({
       title: 'Affiliate Web Shopee Premium | Produk Rekomendasi Pilihan',
       description: 'Temukan produk affiliate Shopee pilihan dengan tampilan premium, link langsung ke Shopee, dan artikel SEO yang informatif.',
@@ -283,9 +340,12 @@ app.get('/kategori/:slug', (req, res) => {
   const products = getActiveProducts();
   const categorySlug = req.params.slug;
   const filtered = products.filter((item) => makeSlug(item.category, 'kategori') === categorySlug);
-  if (!filtered.length) return res.status(404).render('404', { meta: buildMeta({ title: 'Kategori tidak ditemukan', canonical: `${BASE_URL}/kategori/${categorySlug}` }) });
+
+  if (!filtered.length) return render404(req, res, 'Kategori tidak ditemukan');
+
   const categoryName = filtered[0].category;
-  res.render('category', {
+
+  return res.render('category', {
     meta: buildMeta({
       title: `${categoryName} | Produk Affiliate Shopee`,
       description: `Kumpulan produk ${categoryName} pilihan dengan link affiliate Shopee.`,
@@ -301,9 +361,14 @@ app.get('/kategori/:slug', (req, res) => {
 app.get('/produk/:slug', (req, res) => {
   const products = getActiveProducts();
   const product = products.find((item) => item.slug === req.params.slug);
-  if (!product) return res.status(404).render('404', { meta: buildMeta({ title: 'Produk tidak ditemukan', canonical: `${BASE_URL}/produk/${req.params.slug}` }) });
-  const related = products.filter((item) => item.id !== product.id && item.category === product.category).slice(0, 8);
-  res.render('product-detail', {
+
+  if (!product) return render404(req, res, 'Produk tidak ditemukan');
+
+  const related = products
+    .filter((item) => item.id !== product.id && item.category === product.category)
+    .slice(0, 8);
+
+  return res.render('product-detail', {
     meta: buildMeta({
       title: product.seoTitle || `${product.name} | Affiliate Shopee`,
       description: product.seoDescription || product.shortDesc,
@@ -318,8 +383,11 @@ app.get('/produk/:slug', (req, res) => {
 });
 
 app.get('/artikel', (req, res) => {
-  const articles = loadArticles().filter((item) => item.active).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.render('article-list', {
+  const articles = loadArticles()
+    .filter((item) => item.active)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  return res.render('article-list', {
     meta: buildMeta({
       title: 'Artikel Affiliate Shopee | Tips Belanja dan Rekomendasi Produk',
       description: 'Artikel SEO tentang rekomendasi produk, tips belanja, dan inspirasi affiliate Shopee.',
@@ -333,9 +401,12 @@ app.get('/artikel', (req, res) => {
 app.get('/artikel/:slug', (req, res) => {
   const articles = loadArticles().filter((item) => item.active);
   const article = articles.find((item) => item.slug === req.params.slug);
-  if (!article) return res.status(404).render('404', { meta: buildMeta({ title: 'Artikel tidak ditemukan', canonical: `${BASE_URL}/artikel/${req.params.slug}` }) });
+
+  if (!article) return render404(req, res, 'Artikel tidak ditemukan');
+
   const relatedProducts = getActiveProducts().slice(0, 6);
-  res.render('article-detail', {
+
+  return res.render('article-detail', {
     meta: buildMeta({
       title: article.seoTitle || article.title,
       description: article.seoDescription || article.excerpt,
@@ -352,7 +423,10 @@ app.get('/artikel/:slug', (req, res) => {
 app.get('/go/:id', (req, res) => {
   const products = loadProducts();
   const product = products.find((item) => item.id === req.params.id && item.active);
-  if (!product || !product.affiliateUrl) return res.status(404).send('Link affiliate tidak ditemukan');
+
+  if (!product || !product.affiliateUrl) {
+    return res.status(404).send('Link affiliate tidak ditemukan');
+  }
 
   const clicks = loadClicks();
   clicks.unshift({
@@ -372,21 +446,32 @@ app.get('/go/:id', (req, res) => {
 
 app.get(ADMIN_LOGIN_PATH, (req, res) => {
   if (req.session && req.session.admin) return res.redirect(ADMIN_DASHBOARD_PATH);
-  res.render('admin-login', {
-    meta: buildMeta({ title: 'Admin Login', description: 'Login admin.', canonical: `${BASE_URL}${ADMIN_LOGIN_PATH}` }),
+
+  return res.render('admin-login', {
+    meta: buildMeta({
+      title: 'Admin Login',
+      description: 'Login admin.',
+      canonical: `${BASE_URL}${ADMIN_LOGIN_PATH}`
+    }),
     error: null
   });
 });
 
-app.post(`${ADMIN_LOGIN_PATH}`, (req, res) => {
+app.post(ADMIN_LOGIN_PATH, (req, res) => {
   const username = String(req.body.username || '').trim();
   const password = String(req.body.password || '').trim();
+
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
     req.session.admin = true;
     return res.redirect(ADMIN_DASHBOARD_PATH);
   }
+
   return res.status(401).render('admin-login', {
-    meta: buildMeta({ title: 'Admin Login', description: 'Login admin.', canonical: `${BASE_URL}${ADMIN_LOGIN_PATH}` }),
+    meta: buildMeta({
+      title: 'Admin Login',
+      description: 'Login admin.',
+      canonical: `${BASE_URL}${ADMIN_LOGIN_PATH}`
+    }),
     error: 'Username atau password salah.'
   });
 });
@@ -399,8 +484,13 @@ app.get(ADMIN_DASHBOARD_PATH, requireAdmin, (req, res) => {
   const products = loadProducts();
   const articles = loadArticles();
   const clicks = loadClicks();
-  res.render('admin-dashboard', {
-    meta: buildMeta({ title: 'Admin Dashboard', description: 'Dashboard admin.', canonical: `${BASE_URL}${ADMIN_DASHBOARD_PATH}` }),
+
+  return res.render('admin-dashboard', {
+    meta: buildMeta({
+      title: 'Admin Dashboard',
+      description: 'Dashboard admin.',
+      canonical: `${BASE_URL}${ADMIN_DASHBOARD_PATH}`
+    }),
     stats: {
       products: products.length,
       activeProducts: products.filter((item) => item.active).length,
@@ -413,15 +503,24 @@ app.get(ADMIN_DASHBOARD_PATH, requireAdmin, (req, res) => {
 
 app.get('/secure-admin-products-rmz9x', requireAdmin, (req, res) => {
   const products = loadProducts().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.render('admin-products', {
-    meta: buildMeta({ title: 'Admin Produk', description: 'Kelola produk.', canonical: `${BASE_URL}/secure-admin-products-rmz9x` }),
+
+  return res.render('admin-products', {
+    meta: buildMeta({
+      title: 'Admin Produk',
+      description: 'Kelola produk.',
+      canonical: `${BASE_URL}/secure-admin-products-rmz9x`
+    }),
     products
   });
 });
 
 app.get('/secure-admin-products-rmz9x/new', requireAdmin, (req, res) => {
-  res.render('admin-product-form', {
-    meta: buildMeta({ title: 'Tambah Produk', description: 'Tambah produk.', canonical: `${BASE_URL}/secure-admin-products-rmz9x/new` }),
+  return res.render('admin-product-form', {
+    meta: buildMeta({
+      title: 'Tambah Produk',
+      description: 'Tambah produk.',
+      canonical: `${BASE_URL}/secure-admin-products-rmz9x/new`
+    }),
     product: null,
     action: '/secure-admin-products-rmz9x',
     method: 'POST'
@@ -431,20 +530,20 @@ app.get('/secure-admin-products-rmz9x/new', requireAdmin, (req, res) => {
 app.get('/secure-admin-products-rmz9x/:id/edit', requireAdmin, (req, res) => {
   const products = loadProducts();
   const product = products.find((item) => item.id === req.params.id);
+
   if (!product) return res.redirect('/secure-admin-products-rmz9x');
-  res.render('admin-product-form', {
-    meta: buildMeta({ title: 'Edit Produk', description: 'Edit produk.', canonical: `${BASE_URL}/secure-admin-products-rmz9x/${req.params.id}/edit` }),
+
+  return res.render('admin-product-form', {
+    meta: buildMeta({
+      title: 'Edit Produk',
+      description: 'Edit produk.',
+      canonical: `${BASE_URL}/secure-admin-products-rmz9x/${req.params.id}/edit`
+    }),
     product,
     action: `/secure-admin-products-rmz9x/${product.id}?_method=PUT`,
     method: 'POST'
   });
 });
-
-function resolveImage(req, current = '') {
-  if (req.file) return `/uploads/${req.file.filename}`;
-  if (safeText(req.body.imageUrl, 500)) return safeText(req.body.imageUrl, 500);
-  return current;
-}
 
 app.post('/secure-admin-products-rmz9x', requireAdmin, upload.single('imageFile'), (req, res) => {
   const products = loadProducts();
@@ -482,12 +581,14 @@ app.post('/secure-admin-products-rmz9x', requireAdmin, upload.single('imageFile'
 
   products.unshift(product);
   saveProducts(products);
-  res.redirect('/secure-admin-products-rmz9x');
+
+  return res.redirect('/secure-admin-products-rmz9x');
 });
 
 app.put('/secure-admin-products-rmz9x/:id', requireAdmin, upload.single('imageFile'), (req, res) => {
   const products = loadProducts();
   const index = products.findIndex((item) => item.id === req.params.id);
+
   if (index === -1) return res.redirect('/secure-admin-products-rmz9x');
 
   const current = products[index];
@@ -520,19 +621,26 @@ app.put('/secure-admin-products-rmz9x/:id', requireAdmin, upload.single('imageFi
   };
 
   saveProducts(products);
-  res.redirect('/secure-admin-products-rmz9x');
+
+  return res.redirect('/secure-admin-products-rmz9x');
 });
 
 app.post('/secure-admin-products-rmz9x/:id/delete', requireAdmin, (req, res) => {
   const products = loadProducts().filter((item) => item.id !== req.params.id);
   saveProducts(products);
-  res.redirect('/secure-admin-products-rmz9x');
+
+  return res.redirect('/secure-admin-products-rmz9x');
 });
 
 app.get('/secure-admin-articles-rmz9x', requireAdmin, (req, res) => {
   const articles = loadArticles().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  res.render('admin-articles', {
-    meta: buildMeta({ title: 'Admin Artikel', description: 'Kelola artikel.', canonical: `${BASE_URL}/secure-admin-articles-rmz9x` }),
+
+  return res.render('admin-articles', {
+    meta: buildMeta({
+      title: 'Admin Artikel',
+      description: 'Kelola artikel.',
+      canonical: `${BASE_URL}/secure-admin-articles-rmz9x`
+    }),
     articles
   });
 });
@@ -543,6 +651,7 @@ app.post('/secure-admin-articles-rmz9x', requireAdmin, (req, res) => {
   const desiredSlug = makeSlug(req.body.slug || title, 'artikel');
   const slug = uniqueSlug(articles, desiredSlug);
   const now = new Date().toISOString();
+
   articles.unshift({
     id: crypto.randomUUID(),
     title,
@@ -556,29 +665,33 @@ app.post('/secure-admin-articles-rmz9x', requireAdmin, (req, res) => {
     updatedAt: now,
     active: req.body.active === 'on'
   });
+
   saveArticles(articles);
-  res.redirect('/secure-admin-articles-rmz9x');
+
+  return res.redirect('/secure-admin-articles-rmz9x');
 });
 
 app.post('/secure-admin-articles-rmz9x/:id/delete', requireAdmin, (req, res) => {
   const articles = loadArticles().filter((item) => item.id !== req.params.id);
   saveArticles(articles);
-  res.redirect('/secure-admin-articles-rmz9x');
+
+  return res.redirect('/secure-admin-articles-rmz9x');
 });
 
 app.get('/api/products', (_req, res) => {
-  res.json(getActiveProducts());
+  return res.json(getActiveProducts());
 });
 
 app.get('/robots.txt', (_req, res) => {
   res.type('text/plain');
-  res.send(`User-agent: *\nAllow: /\nSitemap: ${BASE_URL}/sitemap.xml`);
+  return res.send(`User-agent: *\nAllow: /\nSitemap: ${BASE_URL}/sitemap.xml`);
 });
 
 app.get('/sitemap.xml', (_req, res) => {
   const products = getActiveProducts();
   const articles = loadArticles().filter((item) => item.active);
   const categories = [...new Set(products.map((item) => item.category).filter(Boolean))];
+
   const urls = [
     `${BASE_URL}/`,
     `${BASE_URL}/artikel`,
@@ -586,23 +699,29 @@ app.get('/sitemap.xml', (_req, res) => {
     ...articles.map((item) => `${BASE_URL}/artikel/${item.slug}`),
     ...categories.map((item) => `${BASE_URL}/kategori/${makeSlug(item, 'kategori')}`)
   ];
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((url) => `  <url><loc>${url}</loc></url>`).join('\n')}\n</urlset>`;
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
+    .map((url) => `  <url><loc>${url}</loc></url>`)
+    .join('\n')}\n</urlset>`;
+
   res.type('application/xml');
-  res.send(xml);
+  return res.send(xml);
 });
 
 app.use((err, _req, res, _next) => {
-  if (err instanceof multer.MulterError || err) {
+  console.error('Server error:', err);
+
+  if (err instanceof multer.MulterError) {
     return res.status(400).send(err.message || 'Terjadi kesalahan upload file');
   }
+
+  return res.status(400).send(err.message || 'Terjadi kesalahan pada server');
 });
 
 app.use((req, res) => {
-  res.status(404).render('404', {
-    meta: buildMeta({ title: 'Halaman tidak ditemukan', description: 'Halaman tidak ditemukan.', canonical: `${BASE_URL}${req.path}` })
-  });
+  return render404(req, res);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
