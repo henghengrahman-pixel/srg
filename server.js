@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const multer = require('multer');
-const slugify = require('slugify');
 const methodOverride = require('method-override');
 const compression = require('compression');
 
@@ -48,7 +47,8 @@ function seedProducts() {
       name: 'Tas Wanita Premium Korean Style',
       slug: 'tas-wanita-premium-korean-style',
       shortDesc: 'Tas wanita elegan dengan model modern, cocok untuk harian dan hangout.',
-      content: '<p>Tas wanita premium dengan desain modern dan bahan yang tampak mewah. Cocok untuk kerja, kuliah, atau jalan santai.</p><ul><li>Desain elegan</li><li>Kapasitas lega</li><li>Cocok untuk hadiah</li></ul>',
+      content:
+        '<p>Tas wanita premium dengan desain modern dan bahan yang tampak mewah. Cocok untuk kerja, kuliah, atau jalan santai.</p><ul><li>Desain elegan</li><li>Kapasitas lega</li><li>Cocok untuk hadiah</li></ul>',
       price: 189000,
       comparePrice: 259000,
       image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80',
@@ -64,7 +64,8 @@ function seedProducts() {
       active: true,
       featured: true,
       seoTitle: 'Tas Wanita Premium Korean Style | Rekomendasi Affiliate Shopee',
-      seoDescription: 'Review tas wanita premium Korean style dengan harga terjangkau, model elegan, dan cocok untuk dipakai harian.',
+      seoDescription:
+        'Review tas wanita premium Korean style dengan harga terjangkau, model elegan, dan cocok untuk dipakai harian.',
       keywords: 'tas wanita premium, tas shopee bagus, tas wanita korean style',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -74,7 +75,8 @@ function seedProducts() {
       name: 'Sepatu Running Pria Ringan Nyaman',
       slug: 'sepatu-running-pria-ringan-nyaman',
       shortDesc: 'Sepatu pria nyaman untuk olahraga, jogging, dan aktivitas harian.',
-      content: '<p>Sepatu running pria yang ringan, breathable, dan nyaman dipakai dalam waktu lama.</p><p>Sol empuk membuat langkah lebih stabil dan nyaman.</p>',
+      content:
+        '<p>Sepatu running pria yang ringan, breathable, dan nyaman dipakai dalam waktu lama.</p><p>Sol empuk membuat langkah lebih stabil dan nyaman.</p>',
       price: 229000,
       comparePrice: 299000,
       image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80',
@@ -90,7 +92,8 @@ function seedProducts() {
       active: true,
       featured: true,
       seoTitle: 'Sepatu Running Pria Ringan Nyaman | Affiliate Shopee Terbaik',
-      seoDescription: 'Sepatu running pria ringan dan nyaman dengan harga terjangkau. Cocok untuk jogging, gym, dan aktivitas sehari-hari.',
+      seoDescription:
+        'Sepatu running pria ringan dan nyaman dengan harga terjangkau. Cocok untuk jogging, gym, dan aktivitas sehari-hari.',
       keywords: 'sepatu running pria, sepatu olahraga pria, sepatu pria shopee',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -105,10 +108,12 @@ function seedArticles() {
       title: '7 Rekomendasi Produk Shopee yang Worth It untuk Dibeli Tahun Ini',
       slug: 'rekomendasi-produk-shopee-worth-it',
       excerpt: 'Daftar produk affiliate Shopee yang menarik, fungsional, dan banyak dicari.',
-      content: '<p>Artikel ini membahas beberapa rekomendasi produk yang layak dipertimbangkan untuk kebutuhan harian.</p><h2>Kenapa pilih produk yang sudah banyak review?</h2><p>Produk dengan review yang baik cenderung lebih aman dipilih karena pembeli sebelumnya sudah memberikan gambaran kualitas.</p>',
+      content:
+        '<p>Artikel ini membahas beberapa rekomendasi produk yang layak dipertimbangkan untuk kebutuhan harian.</p><h2>Kenapa pilih produk yang sudah banyak review?</h2><p>Produk dengan review yang baik cenderung lebih aman dipilih karena pembeli sebelumnya sudah memberikan gambaran kualitas.</p>',
       image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80',
       seoTitle: '7 Rekomendasi Produk Shopee yang Worth It untuk Dibeli Tahun Ini',
-      seoDescription: 'Kumpulan produk affiliate Shopee yang layak dibeli dengan tampilan premium dan harga menarik.',
+      seoDescription:
+        'Kumpulan produk affiliate Shopee yang layak dibeli dengan tampilan premium dan harga menarik.',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       active: true
@@ -167,13 +172,17 @@ function saveClicks(items) {
 }
 
 function makeSlug(input, fallback = 'item') {
-  return (
-    slugify(String(input || fallback), {
-      lower: true,
-      strict: true,
-      locale: 'id'
-    }) || `${fallback}-${Date.now()}`
-  );
+  const base = String(input || fallback)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return base || `${fallback}-${Date.now()}`;
 }
 
 function formatRupiah(value) {
@@ -325,7 +334,8 @@ app.get('/', (req, res) => {
   return res.render('home', {
     meta: buildMeta({
       title: 'Affiliate Web Shopee Premium | Produk Rekomendasi Pilihan',
-      description: 'Temukan produk affiliate Shopee pilihan dengan tampilan premium, link langsung ke Shopee, dan artikel SEO yang informatif.',
+      description:
+        'Temukan produk affiliate Shopee pilihan dengan tampilan premium, link langsung ke Shopee, dan artikel SEO yang informatif.',
       canonical: `${BASE_URL}/`,
       keywords: 'affiliate shopee, produk shopee terbaik, rekomendasi produk shopee'
     }),
